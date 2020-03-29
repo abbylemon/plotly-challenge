@@ -1,10 +1,8 @@
 
-// d3.selectAll("#selDataset").on("change", optionChanged(sampleid));
-
 function init() {
-    // population with a plot on default 
     d3.json("./samples.json").then(function(data) {
-        console.log(data);
+        // console.log(data);
+        // populate the dropdown section with all of the name values
         var names = data.names;
 
         var dropdownMenu = d3.select("#selDataset");
@@ -15,25 +13,10 @@ function init() {
                 .text(name);
         });
 
+        // populate the initial plot by useing the first name value
         var firstid = names[0];
         DemoInfo(firstid);
         BuildCharts(firstid);
-
-        // create initial demographic data, bar plot and bubble plot
-        // need to sort by sample values for specific id, and plot the first 10
-        
-
-        // var sample_id = dropdownMenu.property("value");
-
-        // var x = [];
-        // var y = [];
-
-        // if (sample_id === sample_id) {
-        //     function filterSampleID () {
-                
-        //     }
-        //     x = 
-        // }
 
     }).catch(function(error) {
         console.log(error);
@@ -41,22 +24,22 @@ function init() {
 }
 
 function optionChanged(sampleid) {
-    // update demographic info, bubble plot and bar plot
-    // call functions for each of these
+    // re-draw the plots and chart with the change of the dropdown selection
     DemoInfo(sampleid);
     BuildCharts(sampleid);
-
 }
 
 
 // function to update demographic info
 function DemoInfo(id) {
     d3.json("./samples.json").then(function(data) {
+        // grab the metadata and filter it per the id selected
         var metadata = data.metadata;
         var filterResults = metadata.filter(x => x.id == id);
         filterResults = filterResults[0];
         console.log(filterResults);
 
+        // grab the metadata div, clear it and populate it with the desired data
         var metaData = d3.select("#sample-metadata");
         d3.selectAll("h5").remove();
         metaData.append("h5").text("id: " + filterResults.id);
@@ -70,22 +53,20 @@ function DemoInfo(id) {
     })
 
 }
-// function to update bar plot
+// function to update bar plot and bubble plot
 function BuildCharts(id) {
     d3.json("./samples.json").then(function(data) {
         var samples = data.samples;
-        samples.forEach(function(sample) {
-            // console.log(sample.id);
-            sample.id = String(sample.id);
-            // console.log(sample.id);
-        });
+        // samples.forEach(function(sample) {
+        //     sample.id = String(sample.id);
+        // });
         var filterResult = samples.filter(x => x.id == id)[0];
-        // console.log(filterResult);
-        // filterResult = filterResult[0];
-        // console.log(filterResult);
-        var otu_ids = filterResult.otu_ids;
-        var sample_values = filterResult.sample_values;
-        var otu_labels = filterResult.otu_labels;
+        var otu_ids = filterResult.otu_ids.slice(0,10).reverse();
+        var sample_values = filterResult.sample_values.slice(0,10).reverse();
+        var otu_labels = filterResult.otu_labels.slice(0,10).reverse();
+        // var otu_ids = filterResult.otu_ids.slice(0,10).reverse();
+        // var sample_values = filterResult.sample_values.slice(0,10).reverse();
+        // var otu_labels = filterResult.otu_labels.slice(0,10).reverse();
 
         // var sortedData = data.sort((a,b) =>
         //     b.sample_values - a.sample_values);
@@ -93,12 +74,12 @@ function BuildCharts(id) {
         // var reversedData = slicedData.reverse();
 
         var trace = {
-            x: sample_values.slice(0,10).reverse(),
-            // x: reversedData.map(object => object.sample_values),
-            y: otu_ids.slice(0,10).reverse(),
-            // y: reversedData.map(object => object.otu_ids),
-            // text: reversedData.map(object => object.otu_labels),
-            text: otu_labels.slice(0,10).reverse(),
+            // x: sample_values.slice(0,10).reverse(),
+            // y: otu_ids.slice(0,10).reverse(),
+            // text: otu_labels.slice(0,10).reverse(),
+            x: sample_values,
+            y: otu_ids.map(d=>"OTU " + d),
+            text: otu_labels,
             type: "bar",
             orientation: "h"
         };
@@ -107,9 +88,8 @@ function BuildCharts(id) {
     
         var layout = {
             title: (`Top 10 OTU's for Sample ${id}`),
-            xaxis: {title: "Sample Value"},
-            yaxis: {title: "OTU Type"},
-            margin: {t: 20, l: 50}
+            // xaxis: {title: "Sample Value"},
+            // yaxis: {title: "OTU Type"}
         };
 
         Plotly.newPlot("bar", barData, layout);
